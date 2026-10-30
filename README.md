@@ -3,6 +3,24 @@
 App de escritorio para Windows hecha con **Tauri 2** (Rust + HTML/CSS/JS).
 Creado por Gabriel · [Portafolio](https://trikis.nl/)
 
+### ⬇️ [Descargar la última versión](https://github.com/Trikis67/Optimizador/releases/latest)
+
+> Si Windows muestra «Windows protegió tu PC», haz clic en **Más información → Ejecutar de todas formas**.
+
+## Capturas
+
+| Monitor | Optimización |
+|---|---|
+| ![Monitor](docs/capturas/monitor.png) | ![Optimización](docs/capturas/optimizacion.png) |
+
+| RAM | Analizador de disco |
+|---|---|
+| ![RAM](docs/capturas/ram.png) | ![Analizador de disco](docs/capturas/disco.png) |
+
+| Navegadores | Limpieza |
+|---|---|
+| ![Navegadores](docs/capturas/navegadores.png) | ![Limpieza](docs/capturas/limpieza.png) |
+
 ## Secciones (v0.2)
 
 **Rendimiento**
