@@ -54,9 +54,6 @@ En la versión instalada, usa el botón **Reiniciar como admin** de la barra lat
 
 Para crear el instalador: `npm run build` (queda en `src-tauri/target/release/bundle/`).
 
-## Configurar tus enlaces
-
-Edita `src/js/config.js` para poner tu perfil de GitHub.
 
 ## Estructura
 
