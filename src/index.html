@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Optimizador</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="brand-dot"></span>
+      <span>Optimizador</span>
+    </div>
+
+    <div id="admin-box" class="admin-box"></div>
+
+    <nav id="nav">
+      <span class="nav-label">Rendimiento</span>
+      <button class="nav-btn" data-view="monitor"><i class="ico ico-monitor"></i>Monitor</button>
+      <button class="nav-btn" data-view="ram"><i class="ico ico-ram"></i>RAM</button>
+      <button class="nav-btn" data-view="tweaks"><i class="ico ico-bolt"></i>Optimización</button>
+      <button class="nav-btn" data-view="browsers"><i class="ico ico-globe"></i>Navegadores</button>
+      <button class="nav-btn" data-view="startup"><i class="ico ico-rocket"></i>Inicio de Windows</button>
+      <button class="nav-btn" data-view="power"><i class="ico ico-plug"></i>Energía</button>
+
+      <span class="nav-label">Almacenamiento</span>
+      <button class="nav-btn" data-view="disk"><i class="ico ico-disk"></i>Analizador de disco</button>
+      <button class="nav-btn" data-view="cleaner"><i class="ico ico-broom"></i>Limpieza</button>
+
+      <span class="nav-label">Mantenimiento</span>
+      <button class="nav-btn" data-view="drivers"><i class="ico ico-chip"></i>Drivers</button>
+      <button class="nav-btn" data-view="tools"><i class="ico ico-box"></i>Herramientas</button>
+    </nav>
+
+    <div class="sidebar-foot">
+      <div class="author">Creado por <strong id="author-name"></strong></div>
+      <div class="author-links">
+        <button class="foot-link" data-link="portfolio">Portafolio</button>
+        <button class="foot-link" data-link="github">GitHub</button>
+      </div>
+      <div class="muted small" id="app-version"></div>
+    </div>
+  </aside>
+
+  <main>
+    <section id="view-monitor" class="view"></section>
+    <section id="view-ram" class="view"></section>
+    <section id="view-tweaks" class="view"></section>
+    <section id="view-browsers" class="view"></section>
+    <section id="view-startup" class="view"></section>
+    <section id="view-power" class="view"></section>
+    <section id="view-disk" class="view"></section>
+    <section id="view-cleaner" class="view"></section>
+    <section id="view-drivers" class="view"></section>
+    <section id="view-tools" class="view"></section>
+  </main>
+
+  <div id="tooltip" class="tooltip hidden"></div>
+  <div id="toast" class="toast hidden"></div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
