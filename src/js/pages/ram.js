@@ -175,10 +175,10 @@ async function refresh() {
     $("ram-total").textContent = `de ${fmtSize(total)} · comprometida ${fmtSize(r.detail.committed)} de ${fmtSize(r.detail.commit_limit)}`;
 
     const parts = [
-      { k: "En uso", v: inUse, c: "#a35cff", d: "Memoria que los programas están usando." },
-      { k: "Modificada", v: modified, c: "#e5484d", d: "Datos que deben escribirse al disco antes de reutilizarse." },
-      { k: "En caché", v: standby, c: "#4f7cff", d: "Archivos recientes guardados para abrir más rápido. Se libera sola si hace falta." },
-      { k: "Libre", v: free, c: "#2a2f3a", d: "Totalmente vacía." },
+      { k: "En uso", v: inUse, c: "#b98acb", d: "Memoria que los programas están usando." },
+      { k: "Modificada", v: modified, c: "#c8553d", d: "Datos que deben escribirse al disco antes de reutilizarse." },
+      { k: "En caché", v: standby, c: "#d19a3c", d: "Archivos recientes guardados para abrir más rápido. Se libera sola si hace falta." },
+      { k: "Libre", v: free, c: "#38332a", d: "Totalmente vacía." },
     ];
     $("ram-bar").innerHTML = parts
       .map((p) => `<i style="width:${((p.v / total) * 100).toFixed(2)}%;background:${p.c}" title="${p.k}: ${fmtSize(p.v)}"></i>`)
@@ -197,7 +197,7 @@ async function refresh() {
             <span class="size">${fmtSize(p.mem)}</span>
             <button class="btn tiny ghost" data-trim="${p.pid}" data-name="${esc(p.name)}">Liberar</button>
           </div>
-          <div class="pct"><i style="width:${((p.mem / max) * 100).toFixed(1)}%;background:#a35cff"></i></div>
+          <div class="pct"><i style="width:${((p.mem / max) * 100).toFixed(1)}%;background:#b98acb"></i></div>
         </div>`)
       .join("");
   } catch (e) {
@@ -208,7 +208,7 @@ async function refresh() {
 async function clean(auto) {
   const options = settings.options.length ? settings.options : ["working_sets"];
   try {
-    const r = await invoke("ram_clean", { options });
+    const r = await invoke("ram_clean", { options, auto: !!auto });
     const freed = Math.max(0, r.freed);
     const msg = `${auto ? "Limpieza automática: " : ""}liberados ${fmtSize(freed)}`;
     toast(r.warnings.length && !auto ? `${msg}. ${r.warnings.join(". ")}` : msg, false);

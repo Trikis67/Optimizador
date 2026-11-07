@@ -4,13 +4,13 @@ import { $, invoke, listen, fmtSize, fmtNum, esc, toast, confirmDialog } from ".
 import { squarify } from "../treemap.js";
 
 const CATEGORIES = {
-  video: { color: "#e5484d", ext: ["mp4", "mkv", "avi", "mov", "wmv", "webm", "flv", "m4v"] },
-  imagen: { color: "#f5a524", ext: ["jpg", "jpeg", "png", "gif", "bmp", "webp", "heic", "psd", "raw", "tiff"] },
-  audio: { color: "#d6409f", ext: ["mp3", "wav", "flac", "aac", "ogg", "m4a", "wma"] },
-  comprimido: { color: "#8e4ec6", ext: ["zip", "rar", "7z", "tar", "gz", "iso", "cab", "img"] },
-  programa: { color: "#30a46c", ext: ["exe", "msi", "dll", "sys", "appx", "msix"] },
-  documento: { color: "#12a594", ext: ["pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt", "csv"] },
-  sistema: { color: "#6e6e78", ext: ["tmp", "log", "dmp", "bak", "cache", "etl", "vhdx", "vmdk"] },
+  video: { color: "#c8553d", ext: ["mp4", "mkv", "avi", "mov", "wmv", "webm", "flv", "m4v"] },
+  imagen: { color: "#d19a3c", ext: ["jpg", "jpeg", "png", "gif", "bmp", "webp", "heic", "psd", "raw", "tiff"] },
+  audio: { color: "#b8667a", ext: ["mp3", "wav", "flac", "aac", "ogg", "m4a", "wma"] },
+  comprimido: { color: "#8a6fb0", ext: ["zip", "rar", "7z", "tar", "gz", "iso", "cab", "img"] },
+  programa: { color: "#86a35e", ext: ["exe", "msi", "dll", "sys", "appx", "msix"] },
+  documento: { color: "#5fa8a0", ext: ["pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt", "csv"] },
+  sistema: { color: "#7a7264", ext: ["tmp", "log", "dmp", "bak", "cache", "etl", "vhdx", "vmdk"] },
 };
 const EXT_COLOR = {};
 for (const [cat, { color, ext }] of Object.entries(CATEGORIES)) for (const e of ext) EXT_COLOR[e] = { color, cat };
@@ -18,11 +18,11 @@ for (const [cat, { color, ext }] of Object.entries(CATEGORIES)) for (const e of 
 function fileInfo(name) {
   const dot = name.lastIndexOf(".");
   const ext = dot > 0 ? name.slice(dot + 1).toLowerCase() : "";
-  return EXT_COLOR[ext] || { color: "#5b6b8c", cat: "otro" };
+  return EXT_COLOR[ext] || { color: "#6b6253", cat: "otro" };
 }
 function folderColor(i) {
-  const hues = [212, 196, 228, 186, 244, 170];
-  return `hsl(${hues[i % hues.length]} 55% ${42 - (i % 3) * 5}%)`;
+  const hues = [32, 18, 44, 80, 190, 350];
+  return `hsl(${hues[i % hues.length]} 38% ${40 - (i % 3) * 5}%)`;
 }
 
 let segments = [];

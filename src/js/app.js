@@ -12,8 +12,10 @@ import * as disk from "./pages/disk.js";
 import * as cleaner from "./pages/cleaner.js";
 import * as drivers from "./pages/drivers.js";
 import * as tools from "./pages/tools.js";
+import * as health from "./pages/health.js";
+import * as history from "./pages/history.js";
 
-const pages = { monitor, ram, tweaks, browsers, startup, power, disk, cleaner, drivers, tools };
+const pages = { monitor, ram, tweaks, browsers, startup, power, disk, cleaner, drivers, tools, health, history };
 const started = new Set();
 let current = null;
 

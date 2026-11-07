@@ -227,6 +227,54 @@ pub fn catalog() -> Vec<Tweak> {
             vec![reg(LM, SYSPROFILE, "NetworkThrottlingIndex", Want::D(0xffff_ffff), Some(Want::D(10)))],
             |_| r(Rec::Opcional, "Pruébalo si juegas en línea y notas picos de ping."),
         ),
+        t(
+            "power_throttling", "gaming", "Desactivar la limitación de energía (Power Throttling)",
+            "Windows baja la velocidad de los programas que considera «en segundo plano» para ahorrar energía. \
+             A veces lo hace con juegos, emuladores, OBS o renders que minimizas o que no tienen el foco.",
+            "Los programas en segundo plano (grabación, streaming, renders, descargas) no se frenan.",
+            "Consume un poco más de energía. En laptops con batería es mejor dejarlo activo.",
+            true,
+            vec![reg(LM, r"SYSTEM\CurrentControlSet\Control\Power\PowerThrottling", "PowerThrottlingOff", Want::D(1), None)],
+            |h| {
+                if h.laptop {
+                    r(Rec::NoRecomendado, "Tienes una laptop: la limitación de energía alarga la batería.")
+                } else {
+                    r(Rec::Recomendado, "Es una PC de escritorio: no necesitas ahorrar batería.")
+                }
+            },
+        ),
+        t(
+            "windowed_games", "gaming", "Optimizaciones para juegos en ventana",
+            "Activa el modo moderno de presentación de Windows 11 para juegos DirectX 10/11 en ventana o \
+             «pantalla completa sin bordes».",
+            "Menos latencia de entrada y permite Auto HDR / VRR en juegos en ventana, casi igual que pantalla completa.",
+            "En algún juego antiguo puede dar parpadeos; si pasa, desactívalo.",
+            false,
+            vec![reg(CU, r"Software\Microsoft\DirectX\UserGpuPreferences", "DirectXUserGlobalSettings", Want::S("SwapEffectUpgradeEnable=1;"), None)],
+            |h| {
+                if h.build >= 22000 {
+                    r(Rec::Recomendado, "Tienes Windows 11: aprovecha esta función.")
+                } else {
+                    r(Rec::NoAplica, "Solo está disponible en Windows 11.")
+                }
+            },
+        ),
+        t(
+            "foreground_boost", "gaming", "Más CPU para la ventana activa",
+            "Cambia cómo Windows reparte el procesador: la ventana que estás usando recibe turnos de CPU más \
+             largos que los programas de fondo (Win32PrioritySeparation).",
+            "El juego o programa que tienes al frente responde mejor cuando la CPU está ocupada.",
+            "Los programas en segundo plano van un poco más lentos mientras usas otra ventana.",
+            false,
+            vec![reg(LM, r"SYSTEM\CurrentControlSet\Control\PriorityControl", "Win32PrioritySeparation", Want::D(0x26), Some(Want::D(2)))],
+            |h| {
+                if h.low_end() {
+                    r(Rec::Recomendado, "Con pocos núcleos o poca RAM, priorizar la ventana activa se nota más.")
+                } else {
+                    r(Rec::Opcional, "Tu procesador es potente; la mejora será pequeña.")
+                }
+            },
+        ),
         // ================================ SISTEMA ================================
         t(
             "visual_effects", "sistema", "Efectos visuales en modo rendimiento",
@@ -355,6 +403,105 @@ pub fn catalog() -> Vec<Tweak> {
                     r(Rec::NoRecomendado, "Tienes una laptop: la hibernación protege tu trabajo si se acaba la batería.")
                 } else {
                     (Rec::Recomendado, format!("Es una PC de escritorio; liberarías unos {gb:.0} GB en C:."))
+                }
+            },
+        ),
+        // ================================ BAJOS RECURSOS ================================
+        t(
+            "low_widgets", "bajos", "Quitar Widgets y noticias",
+            "Desactiva el panel de Widgets (clima y noticias de la barra de tareas), que mantiene procesos de Edge \
+             WebView abiertos todo el tiempo.",
+            "Libera entre 100 y 300 MB de RAM y algo de red y CPU en segundo plano.",
+            "Ya no verás el clima ni las noticias en la barra de tareas.",
+            false,
+            vec![reg(LM, r"SOFTWARE\Policies\Microsoft\Dsh", "AllowNewsAndInterests", Want::D(0), None)],
+            |h| {
+                if h.ram_gb() <= 8.5 {
+                    r(Rec::Recomendado, "Con 8 GB de RAM o menos, cada proceso que quitas se nota.")
+                } else {
+                    r(Rec::Opcional, "Tienes RAM de sobra; quítalos solo si no los usas.")
+                }
+            },
+        ),
+        t(
+            "low_copilot", "bajos", "Desactivar Copilot de Windows",
+            "Quita el asistente Copilot integrado en Windows y su botón de la barra de tareas.",
+            "Un proceso menos al iniciar y menos tráfico en segundo plano.",
+            "Si usas Copilot, tendrás que abrirlo desde el navegador.",
+            false,
+            vec![reg(CU, r"Software\Policies\Microsoft\Windows\WindowsCopilot", "TurnOffWindowsCopilot", Want::D(1), None)],
+            |h| {
+                if h.low_end() {
+                    r(Rec::Recomendado, "En una PC de pocos recursos es mejor no tenerlo cargado.")
+                } else {
+                    r(Rec::Opcional, "Desactívalo si no lo usas.")
+                }
+            },
+        ),
+        t(
+            "low_svchost", "bajos", "Agrupar servicios de Windows (ahorra RAM)",
+            "Desde Windows 10, si tienes más de 3,5 GB de RAM, cada servicio corre en su propio proceso svchost.exe. \
+             Este ajuste hace que se agrupen como en PCs con poca memoria.",
+            "Decenas de procesos menos: ahorra entre 150 y 400 MB de RAM según el equipo.",
+            "Si un servicio falla puede arrastrar a otros de su mismo grupo. Requiere reiniciar.",
+            true,
+            vec![reg(LM, r"SYSTEM\CurrentControlSet\Control", "SvcHostSplitThresholdInKB", Want::D(0x0400_0000), Some(Want::D(0x0038_0000)))],
+            |h| {
+                if h.ram_gb() <= 8.5 {
+                    r(Rec::Recomendado, "Con 8 GB de RAM o menos es de los ajustes que más memoria liberan.")
+                } else {
+                    r(Rec::NoRecomendado, "Tienes suficiente RAM: separar los servicios es más estable.")
+                }
+            },
+        ),
+        t(
+            "low_lastaccess", "bajos", "No anotar la fecha de último acceso de archivos",
+            "Cada vez que se abre un archivo, Windows escribe en el disco la hora en que se leyó. Este ajuste lo \
+             desactiva (NtfsDisableLastAccessUpdate).",
+            "Menos escrituras en el disco: el Explorador y las búsquedas van más fluidos, sobre todo en discos mecánicos.",
+            "Algunos programas de respaldo antiguos usan esa fecha. Casi ningún usuario la necesita.",
+            true,
+            vec![reg(LM, r"SYSTEM\CurrentControlSet\Control\FileSystem", "NtfsDisableLastAccessUpdate", Want::D(0x8000_0001), Some(Want::D(0x8000_0002)))],
+            |h| {
+                if h.is_hdd() {
+                    r(Rec::Recomendado, "Tu disco del sistema es mecánico (HDD): cada escritura que evitas ayuda.")
+                } else {
+                    r(Rec::Opcional, "Con SSD la mejora es pequeña, pero también reduce el desgaste.")
+                }
+            },
+        ),
+        t(
+            "low_store_updates", "bajos", "Actualizar apps de la Tienda solo a mano",
+            "Microsoft Store deja de descargar e instalar actualizaciones de apps por su cuenta.",
+            "Evita descargas e instalaciones pesadas en segundo plano mientras usas la PC o juegas.",
+            "Tendrás que actualizar las apps de la Tienda tú mismo (Tienda → Biblioteca → Obtener actualizaciones). \
+             Windows Update no se ve afectado.",
+            false,
+            vec![reg(LM, r"SOFTWARE\Policies\Microsoft\WindowsStore", "AutoDownload", Want::D(2), None)],
+            |h| {
+                if h.low_end() || h.is_hdd() {
+                    r(Rec::Recomendado, "En una PC de pocos recursos las actualizaciones en segundo plano se notan mucho.")
+                } else {
+                    r(Rec::Opcional, "Solo si notas descargas en segundo plano mientras juegas.")
+                }
+            },
+        ),
+        t(
+            "low_spotlight", "bajos", "Quitar imágenes y consejos de la pantalla de bloqueo",
+            "Desactiva «Windows destacado» y los datos curiosos de la pantalla de bloqueo, que se descargan de internet.",
+            "Menos descargas y tareas en segundo plano.",
+            "La pantalla de bloqueo mostrará una imagen fija.",
+            false,
+            vec![
+                reg(CU, CDM, "RotatingLockScreenEnabled", Want::D(0), Some(Want::D(1))),
+                reg(CU, CDM, "RotatingLockScreenOverlayEnabled", Want::D(0), Some(Want::D(1))),
+                reg(CU, CDM, "SubscribedContent-338387Enabled", Want::D(0), Some(Want::D(1))),
+            ],
+            |h| {
+                if h.low_end() {
+                    r(Rec::Recomendado, "Una tarea de fondo menos en una PC justa de recursos.")
+                } else {
+                    r(Rec::Opcional, "Efecto pequeño; actívalo si prefieres una imagen fija.")
                 }
             },
         ),
@@ -871,7 +1018,7 @@ mod tests {
         for t in &cat {
             assert!(ids.insert(t.id), "id repetido: {}", t.id);
             assert!(!t.steps.is_empty());
-            assert!(["gaming", "sistema", "privacidad", "servicios", "navegador"].contains(&t.cat));
+            assert!(["gaming", "bajos", "sistema", "privacidad", "servicios", "navegador"].contains(&t.cat));
         }
         let hw = Hw { ram: 8 << 30, cores: 4, system_disk: "SSD".into(), ..Default::default() };
         for t in &cat {

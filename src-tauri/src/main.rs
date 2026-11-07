@@ -4,6 +4,8 @@
 mod browsers;
 mod cleaner;
 mod drivers;
+mod health;
+mod history;
 mod hw;
 mod memory;
 mod monitor;
@@ -226,7 +228,12 @@ fn move_to_trash(state: State<AppState>, segments: Vec<String>) -> Result<u64, S
     let mut guard = state.scan.lock().unwrap();
     let res = guard.as_mut().ok_or("No hay análisis")?;
     let path = full_path(res, &segments);
-    trash::delete(&path).map_err(|e| format!("No se pudo enviar a la papelera: {e}"))?;
+    history::track(
+        "Analizador de disco",
+        "Enviar a la papelera",
+        path.display().to_string(),
+        trash::delete(&path).map_err(|e| format!("No se pudo enviar a la papelera: {e}")),
+    )?;
     let (bytes, _) = scanner::remove(&mut res.root, &segments).unwrap_or((0, 0));
     Ok(bytes)
 }
@@ -240,17 +247,17 @@ async fn get_power_plans() -> Result<Vec<power::PowerPlan>, String> {
 
 #[tauri::command]
 async fn set_power_plan(guid: String) -> Result<(), String> {
-    power::set_active(&guid)
+    history::track("Energía", "Cambiar plan de energía", guid.clone(), power::set_active(&guid))
 }
 
 #[tauri::command]
 async fn enable_ultimate_plan() -> Result<(), String> {
-    power::enable_ultimate()
+    history::track("Energía", "Activar Máximo rendimiento", "", power::enable_ultimate())
 }
 
 #[tauri::command]
 async fn restore_balanced_plan() -> Result<(), String> {
-    power::set_active(power::BALANCED)
+    history::track("Energía", "Volver a Equilibrado", "", power::set_active(power::BALANCED))
 }
 
 // ---------- Monitor ----------
@@ -262,9 +269,10 @@ async fn perf_snapshot(state: State<'_, AppState>) -> Result<perf::Snapshot, Str
 }
 
 #[tauri::command]
-async fn kill_process(state: State<'_, AppState>, pid: u32) -> Result<(), String> {
+async fn kill_process(state: State<'_, AppState>, pid: u32, name: Option<String>) -> Result<(), String> {
     let mut p = state.perf.lock().unwrap_or_else(|e| e.into_inner());
-    p.kill(pid)
+    let label = name.unwrap_or_default();
+    history::track("Monitor", "Finalizar proceso", format!("{label} (PID {pid})"), p.kill(pid))
 }
 
 // ---------- RAM ----------
@@ -289,8 +297,12 @@ async fn ram_status(state: State<'_, AppState>) -> Result<RamStatus, String> {
 }
 
 #[tauri::command]
-async fn ram_clean(options: Vec<String>) -> Result<memory::CleanResult, String> {
-    Ok(memory::clean(&options))
+async fn ram_clean(options: Vec<String>, auto: Option<bool>) -> Result<memory::CleanResult, String> {
+    let r = memory::clean(&options);
+    if !auto.unwrap_or(false) {
+        history::log("RAM", "Liberar memoria", format!("{} MB liberados", r.freed.max(0) / 1_048_576), true);
+    }
+    Ok(r)
 }
 
 #[tauri::command]
@@ -309,16 +321,14 @@ async fn tweaks_list(state: State<'_, AppState>) -> Result<Vec<tweaks::TweakInfo
 #[tauri::command]
 async fn tweak_set(state: State<'_, AppState>, id: String, enabled: bool) -> Result<tweaks::TweakInfo, String> {
     let hw = get_hw(&state)?;
-    if enabled {
-        tweaks::apply(&id, &hw)
-    } else {
-        tweaks::revert(&id, &hw)
-    }
+    let r = if enabled { tweaks::apply(&id, &hw) } else { tweaks::revert(&id, &hw) };
+    let title = r.as_ref().map(|t| t.title.clone()).unwrap_or_else(|_| id.clone());
+    history::track("Optimización", if enabled { "Aplicar ajuste" } else { "Deshacer ajuste" }, title, r)
 }
 
 #[tauri::command]
 async fn create_restore_point() -> Result<(), String> {
-    tweaks::create_restore_point()
+    history::track("Sistema", "Crear punto de restauración", "", tweaks::create_restore_point())
 }
 
 // ---------- Limpieza ----------
@@ -330,7 +340,9 @@ async fn cleaner_scan() -> Result<Vec<cleaner::CleanItem>, String> {
 
 #[tauri::command]
 async fn cleaner_run(ids: Vec<String>) -> Result<cleaner::CleanReport, String> {
-    Ok(cleaner::clean(&ids))
+    let r = cleaner::clean(&ids);
+    history::log("Limpieza", "Limpiar archivos", format!("{} · {} MB liberados", ids.join(", "), r.freed / 1_048_576), true);
+    Ok(r)
 }
 
 // ---------- Navegadores ----------
@@ -342,7 +354,7 @@ async fn browsers_list() -> Result<Vec<browsers::BrowserInfo>, String> {
 
 #[tauri::command]
 async fn browser_clean(id: String) -> Result<u64, String> {
-    browsers::clean(&id)
+    history::track("Navegadores", "Limpiar caché", id.clone(), browsers::clean(&id))
 }
 
 // ---------- Inicio de Windows ----------
@@ -354,7 +366,8 @@ async fn startup_list() -> Result<Vec<startup::StartupEntry>, String> {
 
 #[tauri::command]
 async fn startup_set(id: String, enabled: bool) -> Result<(), String> {
-    startup::set_enabled(&id, enabled)
+    let action = if enabled { "Activar al inicio" } else { "Desactivar al inicio" };
+    history::track("Inicio de Windows", action, id.clone(), startup::set_enabled(&id, enabled))
 }
 
 // ---------- Drivers ----------
@@ -363,6 +376,73 @@ async fn startup_set(id: String, enabled: bool) -> Result<(), String> {
 async fn drivers_info(state: State<'_, AppState>) -> Result<drivers::DriversInfo, String> {
     let hw = get_hw(&state)?;
     Ok(drivers::info(&hw))
+}
+
+#[tauri::command]
+async fn drivers_store_scan() -> Result<drivers::StoreReport, String> {
+    tauri::async_runtime::spawn_blocking(drivers::scan_store).await.map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+async fn drivers_store_delete(items: Vec<drivers::DriverPkg>) -> Result<drivers::DeleteReport, String> {
+    let r = tauri::async_runtime::spawn_blocking(move || drivers::delete_packages(&items))
+        .await
+        .map_err(|e| e.to_string())?;
+    let mut detail = format!("{} MB liberados", r.freed / 1_048_576);
+    if !r.deleted.is_empty() {
+        detail.push_str(&format!(" · {}", r.deleted.join(", ")));
+    }
+    history::log("Drivers", "Borrar drivers obsoletos", detail, r.failed.is_empty());
+    Ok(r)
+}
+
+#[tauri::command]
+async fn drivers_scan_devices() -> Result<(), String> {
+    history::track("Drivers", "Buscar cambios de hardware", "", drivers::scan_devices())
+}
+
+#[tauri::command]
+async fn drivers_enable_device(id: String, name: String) -> Result<(), String> {
+    history::track("Drivers", "Habilitar dispositivo", name, drivers::enable_device(&id))
+}
+
+// ---------- Salud del sistema ----------
+
+#[tauri::command]
+async fn health_report() -> Result<health::Report, String> {
+    tauri::async_runtime::spawn_blocking(health::report).await.map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+async fn health_repair(kind: String) -> Result<String, String> {
+    let r = health::run_repair(&kind);
+    let title = r.clone().unwrap_or_else(|_| kind.clone());
+    history::track("Salud", "Iniciar reparación", title, r)
+}
+
+#[tauri::command]
+async fn health_battery_report() -> Result<(), String> {
+    health::battery_report()
+}
+
+// ---------- Historial ----------
+
+#[tauri::command]
+fn history_list() -> Vec<history::Entry> {
+    history::list()
+}
+
+#[tauri::command]
+fn history_clear() -> Result<(), String> {
+    history::clear()
+}
+
+#[tauri::command]
+fn history_open_folder() -> Result<(), String> {
+    let dir = history::folder();
+    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    std::process::Command::new("explorer").arg(dir).spawn().map_err(|e| e.to_string())?;
+    Ok(())
 }
 
 // ---------- Herramientas ----------
@@ -374,12 +454,12 @@ async fn tools_list() -> Result<Vec<tools::ToolInfo>, String> {
 
 #[tauri::command]
 async fn tool_install(id: String) -> Result<(), String> {
-    tools::install(&id)
+    history::track("Herramientas", "Instalar", id.clone(), tools::install(&id))
 }
 
 #[tauri::command]
 async fn tool_uninstall(id: String) -> Result<(), String> {
-    tools::uninstall(&id)
+    history::track("Herramientas", "Desinstalar", id.clone(), tools::uninstall(&id))
 }
 
 fn main() {
@@ -423,6 +503,16 @@ fn main() {
             startup_list,
             startup_set,
             drivers_info,
+            drivers_store_scan,
+            drivers_store_delete,
+            drivers_scan_devices,
+            drivers_enable_device,
+            health_report,
+            health_repair,
+            health_battery_report,
+            history_list,
+            history_clear,
+            history_open_folder,
             tools_list,
             tool_install,
             tool_uninstall,

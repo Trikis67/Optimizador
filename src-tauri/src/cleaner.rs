@@ -137,6 +137,39 @@ fn categories() -> Vec<Category> {
             default_on: true,
             targets: vec![Target::Dir(windir(r"ServiceProfiles\NetworkService\AppData\Local\Microsoft\Windows\DeliveryOptimization\Cache"))],
         },
+        Category {
+            id: "driver_leftovers",
+            title: "Restos de instaladores de drivers",
+            what: "Carpetas que dejan los instaladores de NVIDIA y AMD al descomprimirse (C:\\NVIDIA, C:\\AMD) y las \
+                   descargas de drivers de la app de NVIDIA.",
+            note: "Seguro: son copias de instaladores ya usados, no el driver instalado. Si quieres reinstalar, \
+                   descargas el instalador de nuevo. Necesita administrador.",
+            admin: true,
+            default_on: true,
+            targets: vec![
+                Target::Dir(PathBuf::from(r"C:\NVIDIA")),
+                Target::Dir(PathBuf::from(r"C:\AMD")),
+                Target::Dir(progdata(r"NVIDIA Corporation\Downloader")),
+            ],
+        },
+        Category {
+            id: "windows_logs",
+            title: "Registros (logs) de Windows",
+            what: "Archivos de registro de actualizaciones y reparaciones (Windows\\Logs\\CBS y DISM).",
+            note: "Seguro. Solo sirven para diagnosticar problemas de actualización. Los que estén en uso se saltan.",
+            admin: true,
+            default_on: false,
+            targets: vec![Target::Dir(windir(r"Logs\CBS")), Target::Dir(windir(r"Logs\DISM"))],
+        },
+        Category {
+            id: "inet_cache",
+            title: "Caché de Internet de Windows",
+            what: "Archivos que guardan apps antiguas y componentes de Windows que usan el motor de Internet Explorer.",
+            note: "Seguro. No afecta a Chrome, Edge ni Brave (esos están en Navegadores).",
+            admin: false,
+            default_on: false,
+            targets: vec![Target::Dir(local(r"Microsoft\Windows\INetCache"))],
+        },
     ]
 }
 

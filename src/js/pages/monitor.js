@@ -4,11 +4,11 @@ import { $, invoke, esc, fmtSize, fmtRate, fmtPct, fmtNum, toast, confirmDialog,
 import { LineChart } from "../chart.js";
 
 const RES = {
-  cpu: { label: "CPU", color: "#4f7cff" },
-  ram: { label: "Memoria", color: "#a35cff" },
-  gpu: { label: "GPU", color: "#2fd0a0" },
-  disk: { label: "Disco", color: "#f5a524" },
-  net: { label: "Red", color: "#e5484d" },
+  cpu: { label: "CPU", color: "#d19a3c" },
+  ram: { label: "Memoria", color: "#b98acb" },
+  gpu: { label: "GPU", color: "#86a35e" },
+  disk: { label: "Disco", color: "#5fa8a0" },
+  net: { label: "Red", color: "#c8553d" },
 };
 
 let selected = "cpu";
@@ -81,7 +81,7 @@ export function init(el) {
     </div>`;
 
   for (const [k, r] of Object.entries(RES)) {
-    const series = k === "disk" || k === "net" ? [{ color: r.color }, { color: "#ffffff", fill: false }] : [{ color: r.color }];
+    const series = k === "disk" || k === "net" ? [{ color: r.color }, { color: "#efe8d6", fill: false }] : [{ color: r.color }];
     minis[k] = new LineChart($(`mini-${k}`), { max: k === "disk" || k === "net" ? null : 100, series, grid: false });
   }
   setBig();
@@ -113,7 +113,7 @@ function setBig() {
   const dual = selected === "disk" || selected === "net";
   big = new LineChart($("big-chart"), {
     max: dual ? null : 100,
-    series: dual ? [{ color: r.color }, { color: "#ffffff", fill: false }] : [{ color: r.color }],
+    series: dual ? [{ color: r.color }, { color: "#efe8d6", fill: false }] : [{ color: r.color }],
   });
   // Rellenamos con el historial de la mini-gráfica para no empezar en blanco
   big.data = minis[selected].data.map((d) => [...d]);
@@ -230,7 +230,7 @@ async function onKill(e) {
   );
   if (!ok) return;
   try {
-    await invoke("kill_process", { pid: Number(b.dataset.kill) });
+    await invoke("kill_process", { pid: Number(b.dataset.kill), name: b.dataset.name });
     toast(`${b.dataset.name} finalizado`);
   } catch (err) {
     toast(String(err), true);

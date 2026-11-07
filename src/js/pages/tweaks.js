@@ -1,10 +1,11 @@
-// Optimización: ajustes de gaming, sistema, privacidad y servicios.
+// Optimización: ajustes de gaming, bajos recursos, sistema, privacidad y servicios.
 
 import { $, invoke, esc, fmtSize, toast, withBusy, adminNote, loading, helpBtn } from "../util.js";
 import { loadTweaks, renderTweaks, applyRecommended } from "../tweakpanel.js";
 
 const TABS = [
   { id: "gaming", label: "Gaming", desc: "Ajustes para que los juegos tengan prioridad y menos interrupciones." },
+  { id: "bajos", label: "Bajos recursos", desc: "Para PCs con poca RAM, disco mecánico o procesador antiguo: menos procesos, descargas y escrituras en segundo plano." },
   { id: "sistema", label: "Sistema", desc: "Hacen que Windows se sienta más rápido y use menos recursos." },
   { id: "privacidad", label: "Privacidad", desc: "Menos datos enviados a Microsoft y menos tareas en segundo plano." },
   { id: "servicios", label: "Servicios", desc: "Servicios de Windows que puedes desactivar si no los usas. Revisa el «?» de cada uno." },

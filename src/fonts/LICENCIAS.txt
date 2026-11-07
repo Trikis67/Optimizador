@@ -1,0 +1,6 @@
+Fonts included in the app (from Google Fonts), all under the SIL Open Font License 1.1:
+https://openfontlicense.org
+
+- Alegreya Sans - Copyright The Alegreya Sans Project Authors (Juan Pablo del Peral, Huerta Tipografica)
+- Alfa Slab One - Copyright JM Sole
+- Special Elite - Copyright Astigmatic (AOETI)

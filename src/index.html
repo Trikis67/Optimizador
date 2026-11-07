@@ -3,14 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Optimizador</title>
+  <title>Optimizador · Trikis</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <aside class="sidebar">
     <div class="brand">
-      <span class="brand-dot"></span>
-      <span>Optimizador</span>
+      <img class="brand-logo" src="img/logo.png" alt="" />
+      <div class="brand-text">
+        <span class="brand-name">Optimizador</span>
+        <span class="brand-sub">por Trikis</span>
+      </div>
     </div>
 
     <div id="admin-box" class="admin-box"></div>
@@ -29,8 +32,10 @@
       <button class="nav-btn" data-view="cleaner"><i class="ico ico-broom"></i>Limpieza</button>
 
       <span class="nav-label">Mantenimiento</span>
+      <button class="nav-btn" data-view="health"><i class="ico ico-heart"></i>Salud del sistema</button>
       <button class="nav-btn" data-view="drivers"><i class="ico ico-chip"></i>Drivers</button>
       <button class="nav-btn" data-view="tools"><i class="ico ico-box"></i>Herramientas</button>
+      <button class="nav-btn" data-view="history"><i class="ico ico-clock"></i>Historial de cambios</button>
     </nav>
 
     <div class="sidebar-foot">
@@ -54,6 +59,8 @@
     <section id="view-cleaner" class="view"></section>
     <section id="view-drivers" class="view"></section>
     <section id="view-tools" class="view"></section>
+    <section id="view-health" class="view"></section>
+    <section id="view-history" class="view"></section>
   </main>
 
   <div id="tooltip" class="tooltip hidden"></div>
